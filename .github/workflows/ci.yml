@@ -1,0 +1,77 @@
+name: Tap CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tap-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  formula:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out reviewed sources
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Locate runner Homebrew
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
+          fi
+      - name: Test maintenance script offline
+        run: python3 -m unittest discover -s tests -v
+      - name: Register this checkout as the tap
+        run: |
+          brew --version
+          tap_dir="$(brew --repository)/Library/Taps/pelikanm400/homebrew-tap"
+          mkdir -p "$(dirname "$tap_dir")"
+          test ! -e "$tap_dir"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          if brew command trust >/dev/null 2>&1; then
+            brew trust --formula pelikanm400/tap/paperdrop
+          fi
+          brew info pelikanm400/tap/paperdrop
+      - name: Formula style
+        run: brew style Formula/paperdrop.rb
+      - name: Install application and Pillow from source
+        run: brew install --build-from-source pelikanm400/tap/paperdrop
+      - name: Test installed CLI and read-only onboarding
+        run: brew test pelikanm400/tap/paperdrop
+      - name: Audit formula
+        run: brew audit --strict --online pelikanm400/tap/paperdrop
+      - name: Reinstall from source and test again
+        run: |
+          brew reinstall --build-from-source pelikanm400/tap/paperdrop
+          brew test pelikanm400/tap/paperdrop
+      - name: Uninstall and verify removal
+        run: |
+          brew uninstall pelikanm400/tap/paperdrop
+          test ! -e "$(brew --prefix)/opt/paperdrop"
+          test ! -e "$(brew --prefix)/bin/paperdrop"
+      - name: Clean up an installation left by a failed check
+        if: always()
+        run: |
+          if brew list --versions pelikanm400/tap/paperdrop >/dev/null 2>&1; then
+            brew uninstall --force pelikanm400/tap/paperdrop
+          fi
