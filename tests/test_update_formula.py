@@ -52,6 +52,24 @@ class AssetValidationTests(unittest.TestCase):
         self.assertEqual(self.module.verified_release(self.release, self.downloads.__getitem__),
                          ('0.3.1', self.base + 'paperdrop-0.3.1.tar.gz', self.digest))
 
+    def test_portable_checksums_take_precedence_when_both_sum_assets_exist(self):
+        import copy
+        release = copy.deepcopy(self.release)
+        downloads = dict(self.downloads)
+        legacy = b'0' * 64 + b'  /builder/work/paperdrop-0.3.1.tar.gz\n'
+        release['assets'][1].update(size=len(legacy), digest='sha256:' + hashlib.sha256(legacy).hexdigest())
+        downloads[self.base + 'SHA256SUMS'] = legacy
+        portable = self.sums
+        release['assets'].append({
+            'name': 'SHA256SUMS.portable',
+            'browser_download_url': self.base + 'SHA256SUMS.portable',
+            'state': 'uploaded', 'content_type': 'text/plain', 'size': len(portable),
+            'digest': 'sha256:' + hashlib.sha256(portable).hexdigest(),
+        })
+        downloads[self.base + 'SHA256SUMS.portable'] = portable
+        self.assertEqual(self.module.verified_release(release, downloads.__getitem__),
+                         ('0.3.1', self.base + 'paperdrop-0.3.1.tar.gz', self.digest))
+
     def test_untrusted_asset_fields_fail_closed(self):
         import copy
         for field, value in [('browser_download_url', 'https://evil.test/source.tar.gz'),
@@ -168,6 +186,7 @@ class NetworkBoundaryTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 self.module.validate_network_url(url)
         self.module.validate_network_url(self.module.DOWNLOAD_BASE + 'v0.3.1/SHA256SUMS')
+        self.module.validate_network_url(self.module.DOWNLOAD_BASE + 'v0.3.2/SHA256SUMS.portable')
         self.module.validate_network_url('https://release-assets.githubusercontent.com/github-production-release-asset/x?sig=y', redirect=True)
         with self.assertRaises(ValueError):
             self.module.validate_network_url('https://evil.test/x', redirect=True)
@@ -202,6 +221,28 @@ class NetworkBoundaryTests(unittest.TestCase):
         self.assertNotIn('Cookie', opener.request.headers)
         self.assertEqual(opener.timeout, 30)
         self.assertEqual(response.read_size, 4 * 1024 * 1024 + 1)
+
+    def test_portable_checksum_download_uses_the_small_response_bound(self):
+        from email.message import Message
+        from unittest.mock import patch
+        url = self.module.DOWNLOAD_BASE + 'v0.3.2/SHA256SUMS.portable'
+        class Response:
+            headers = Message()
+            headers['Content-Type'] = 'text/plain'
+            read_size = None
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def geturl(self): return url
+            def read(self, size):
+                self.read_size = size
+                return b'checksum data'
+        class Opener:
+            def open(self, request, timeout):
+                return response
+        response = Response()
+        with patch.object(self.module.urllib.request, 'build_opener', return_value=Opener()):
+            self.assertEqual(self.module.download_bytes(url), b'checksum data')
+        self.assertEqual(response.read_size, 65536 + 1)
 
     def test_more_than_pagination_cap_is_an_error_not_silent_partial_success(self):
         import json

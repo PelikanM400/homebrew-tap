@@ -3,8 +3,8 @@ class Paperdrop < Formula
 
   desc "Daily wallpaper client for macOS and Linux Xfce"
   homepage "https://github.com/PelikanM400/paperdrop"
-  url "https://github.com/PelikanM400/paperdrop/releases/download/v0.3.1/paperdrop-0.3.1.tar.gz"
-  sha256 "4faeb27bb788e2d6232ad2b316e4dcb9933f2abde9babd4a94499801610de87e"
+  url "https://github.com/PelikanM400/paperdrop/releases/download/v0.3.2/paperdrop-0.3.2.tar.gz"
+  sha256 "65169ba46dc0307c339e1a9c2f23d9dd2f4e864c2425a54e0f824ed39962ac22"
   license "MIT"
 
   depends_on "jpeg-turbo"
@@ -66,7 +66,7 @@ class Paperdrop < Formula
       In your desktop session, run this separately to configure PaperDrop:
         paperdrop install
       Linux wallpaper support is Xfce only (xfconf-query and a user systemd session).
-      Upgrade this installation with brew upgrade paperdrop, not pip/pipx.
+      Upgrade this installation with brew upgrade pelikanm400/tap/paperdrop, not pip/pipx.
       After migration to this tap, schedules use the stable opt path; ordinary brew
       upgrades do not require reinstalling schedules and do not resume a paused job.
       This is pre-release software; CI is not real-desktop acceptance testing.

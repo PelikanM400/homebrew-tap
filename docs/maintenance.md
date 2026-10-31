@@ -20,10 +20,11 @@ assets must be named `paperdrop-VERSION.tar.gz`. A Python/PEP 440 prerelease fil
 that differs from its SemVer tag deliberately requires manual review instead of
 being guessed or normalized.
 
-The source asset and `SHA256SUMS` must each occur exactly once, with canonical
+The source asset and checksum asset must each occur exactly once, with canonical
 repository/tag/name URLs, uploaded state, bounded positive integer sizes and
-lowercase GitHub `sha256:` digests. Checksums must contain unique safe filenames;
-the downloaded sdist must match both its asset digest and `SHA256SUMS`. Network
+lowercase GitHub `sha256:` digests. `SHA256SUMS.portable` is preferred when present;
+older releases may provide only `SHA256SUMS`. Checksums must contain unique safe filenames;
+the downloaded sdist must match both its asset digest and the selected checksum file. Network
 requests are HTTPS GET only with bounded responses, a timeout and restricted
 GitHub release-CDN redirects. A failure never produces a partial formula update.
 

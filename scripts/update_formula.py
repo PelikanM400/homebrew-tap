@@ -27,7 +27,7 @@ def validate_network_url(url, *, redirect=False):
         if len(tail) == 2:
             tag, name = tail
             version_key(tag)
-            if name in ('SHA256SUMS', 'paperdrop-' + tag[1:] + '.tar.gz'):
+            if name in ('SHA256SUMS', 'SHA256SUMS.portable', 'paperdrop-' + tag[1:] + '.tar.gz'):
                 return
     raise ValueError('URL outside fixed official release endpoints')
 
@@ -41,7 +41,8 @@ class SafeRedirect(urllib.request.HTTPRedirectHandler):
 def download_bytes(url):
     validate_network_url(url)
     api = url.startswith(API_BASE)
-    limit = 4 * 1024 * 1024 if api else (65536 if url.endswith('/SHA256SUMS') else MAX_ARCHIVE)
+    limit = 4 * 1024 * 1024 if api else (
+        65536 if url.endswith(('/SHA256SUMS', '/SHA256SUMS.portable')) else MAX_ARCHIVE)
     # No ambient token, netrc, cookies or credential-bearing proxy environment.
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), SafeRedirect())
     request = urllib.request.Request(url, headers={
@@ -121,7 +122,9 @@ def verified_release(release, fetch):
             raise ValueError('download size/digest mismatch')
         return data
 
-    sums = download('SHA256SUMS', 65536)
+    checksum_assets = [asset.get('name') for asset in assets]
+    sums_name = 'SHA256SUMS.portable' if 'SHA256SUMS.portable' in checksum_assets else 'SHA256SUMS'
+    sums = download(sums_name, 65536)
     try:
         lines = sums.decode('ascii').splitlines()
     except UnicodeDecodeError as exc:
