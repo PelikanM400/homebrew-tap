@@ -3,8 +3,8 @@ class Paperdrop < Formula
 
   desc "Daily wallpaper client for macOS and Linux Xfce"
   homepage "https://github.com/PelikanM400/paperdrop"
-  url "https://github.com/PelikanM400/paperdrop/releases/download/v0.3.2/paperdrop-0.3.2.tar.gz"
-  sha256 "65169ba46dc0307c339e1a9c2f23d9dd2f4e864c2425a54e0f824ed39962ac22"
+  url "https://github.com/PelikanM400/paperdrop/releases/download/v0.3.3/paperdrop-0.3.3.tar.gz"
+  sha256 "274e273493be6f333db25ba15b47fa45ccad9936ffd714107b052fd47ed349c3"
   license "MIT"
 
   depends_on "jpeg-turbo"
