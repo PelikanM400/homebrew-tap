@@ -5,8 +5,8 @@
 PaperDrop 的个人 tap：macOS 与 Linux **Xfce** 的每日壁纸工具，不是 Homebrew/core 官方配方。
 This personal tap packages PaperDrop for macOS and Linux **Xfce**; it is not an official Homebrew/core formula.
 
-> **预发布状态 / Pre-release:** 配方使用 PaperDrop 0.3.2 预发布制品；真机桌面与定时验收尚未完成。
-> **Pre-release:** the formula targets PaperDrop 0.3.2, an upstream pre-release. macOS/Xfce real-device desktop and schedule acceptance are still outstanding.
+> **预发布状态 / Pre-release:** 配方使用 PaperDrop 0.3.3 预发布制品；真机桌面与定时验收尚未完成。
+> **Pre-release:** the formula targets PaperDrop 0.3.3, an upstream pre-release. macOS/Xfce real-device desktop and schedule acceptance are still outstanding.
 
 ## 安装 / Install
 
